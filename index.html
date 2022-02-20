@@ -15,10 +15,16 @@
     <meta name="twitter:creator" content="@raclamusi">
     <link rel="shortcut icon" type="image/png" href="image/icon.png">
     <link rel="apple-touch-icon" type="image/png" href="image/icon.png">
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <link rel="stylesheet" type="text/css" href="codemirror/lib/codemirror.css">
     <link rel="stylesheet" type="text/css" href="stylesheet/common.css">
     <link rel="stylesheet" type="text/css" href="stylesheet/header.css">
+    <link rel="stylesheet" type="text/css" href="stylesheet/main.css">
+    <link rel="stylesheet" type="text/css" href="stylesheet/editor.css">
+    <link rel="stylesheet" type="text/css" href="stylesheet/debug.css">
     <script type="text/javascript" src="codemirror/lib/codemirror.js"></script>
+    <script type="text/javascript" src="codemirror/addon/edit/matchbrackets.js"></script>
+    <script type="text/javascript" src="codemirror/addon/edit/closebrackets.js"></script>
     <script type="text/javascript" src="codemirror/mode/brainfuck/brainfuck.js"></script>
     <script type="text/javascript" src="script/ie.js"></script>
     <script type="text/javascript" src="script/main.js"></script>
@@ -26,7 +32,175 @@
 <body>
     <header class="header">ぼくの考えた最強の Brainfuck 環境</header>
     <main class="main">
-        <textarea id="editor"></textarea>
+        <div class="main_col">
+            <div class="main_row">
+                <div class="editor">
+                    <div class="editor_copyrow">
+                        <button id="editor_copy" class="editor_copy">Copy</button>
+                    </div>
+                    <div class="editor_code">
+                        <textarea id="editor"></textarea>
+                    </div>
+                </div>
+            </div>
+            <details class="main_row">
+                <summary class="main_summary">入力</summary>
+                <div class="editor">
+                    <div class="editor_copyrow">
+                        <button id="input_copy" class="editor_copy">Copy</button>
+                    </div>
+                    <div class="editor_code">
+                        <textarea id="input" class="editor_textarea"></textarea>
+                    </div>
+                </div>
+            </details>
+            <details class="main_row" open>
+                <summary class="main_summary">出力</summary>
+                <div class="editor">
+                    <div class="editor_copyrow">
+                        <button id="output_copy" class="editor_copy">Copy</button>
+                    </div>
+                    <div class="editor_code">
+                        <pre id="output" class="editor_pre"></pre>
+                    </div>
+                </div>
+            </details>
+            <details class="main_row" open>
+                <summary class="main_summary">エラー</summary>
+                <div class="editor">
+                    <div class="editor_copyrow">
+                        <button id="error_copy" class="editor_copy">Copy</button>
+                    </div>
+                    <div class="editor_code">
+                        <pre id="error" class="editor_pre"></pre>
+                    </div>
+                </div>
+            </details>
+        </div>
+        <div class="main_col">
+            <div class="main_row">
+                <div class="main_summary">実行</div>
+                <div>
+                    <button class="debug_icon run">実行</button>
+                    <button class="debug_icon pause">停止</button>
+                    <button class="debug_icon stop">終了</button>
+                    <button class="debug_icon step">ステップ実行</button>
+                    <button>ステップ実行（マクロを飛ばす）</button>
+                    <button>マクロを出るまで実行</button>
+                    <button>ループを出るまで実行</button>
+                    <button class="debug_icon previous">逆向きステップ実行</button>
+                </div>
+                <div>
+                    <button>マクロを展開</button>
+                    <button>C++にコンパイル</button>
+                </div>
+            </div>
+            <div class="main_row">
+                <div class="main_summary">デバッグ</div>
+                <details class="main_row" open>
+                    <summary class="main_summary">メモリ</summary>
+                    <div class="debug_memory">
+                        <div class="debug_memory_row">
+                            <div class="debug_memory_info">
+                                <span>ポインタ: <span id="pointer">00000000</span></span>
+                                <span>
+                                    <span><input type="checkbox" id="memory_autoscroll" checked><label for="memory_autoscroll"> 自動スクロール</label></span>
+                                    <button>メモリを追加</button>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="debug_memory_row">
+                            <div class="debug_memory_linenumber"></div>
+                            <div class="debug_memory_grid debug_gray">
+                                <span>00</span>
+                                <span>01</span>
+                                <span>02</span>
+                                <span>03</span>
+                                <span>04</span>
+                                <span>05</span>
+                                <span>06</span>
+                                <span>07</span>
+                                <span>08</span>
+                                <span>09</span>
+                                <span>0A</span>
+                                <span>0B</span>
+                                <span>0C</span>
+                                <span>0D</span>
+                                <span>0E</span>
+                                <span>0F</span>
+                            </div>
+                        </div>
+                        <div class="debug_memory_row">
+                            <div id="memlines" class="debug_memory_linenumber debug_gray"></div>
+                            <div id="memcells" class="debug_memory_grid debug_hoverable"></div>
+                        </div>
+                    </div>
+                </details>
+                <details class="main_row" open>
+                    <summary class="main_summary">入力バッファ</summary>
+                    <div id="ibuffer" class="debug_input debug_hoverable"></div>
+                </details>
+            </div>
+            <div class="main_row">
+                <div class="main_summary">設定</div>
+                <div>
+                    <div>
+                        <label>タブサイズ:</label>
+                        <select>
+                            <option>1</option>
+                            <option>2</option>
+                            <option>3</option>
+                            <option selected>4</option>
+                            <option>5</option>
+                            <option>6</option>
+                            <option>7</option>
+                            <option>8</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>インデントサイズ:</label>
+                        <select>
+                            <option>1</option>
+                            <option>2</option>
+                            <option>3</option>
+                            <option selected>4</option>
+                            <option>5</option>
+                            <option>6</option>
+                            <option>7</option>
+                            <option>8</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>インデントの種類:</label>
+                        <select>
+                            <option selected>タブ</option>
+                            <option>スペース</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>EOFの値:</label>
+                        <select>
+                            <option selected>-1 (255)</option>
+                            <option>0</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>ANSIエスケープシーケンス:</label>
+                        <select>
+                            <option selected>有効</option>
+                            <option>無効</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>マクロ:</label>
+                        <select>
+                            <option selected>有効</option>
+                            <option>無効</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
     </main>
 </body>
 </html>

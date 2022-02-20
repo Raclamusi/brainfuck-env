@@ -2,5 +2,6 @@
 .header {
     padding: 0.5rem 1rem;
     background-color: lightcyan;
-    font-size: 1.1rem;
+    border: 0.1rem solid lightblue;
+    font-size: 1.2rem;
 }

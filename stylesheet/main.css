@@ -1,0 +1,30 @@
+
+.main {
+    display: flex;
+    padding: 2rem 1rem;
+}
+
+.main_col {
+    width: 50%;
+}
+
+@media screen and (max-width: 999px) {
+    .main {
+        display: block;
+        padding: 2rem 0.1rem;
+    }
+    .main_col {
+        width: 100%;
+    }
+}
+
+.main_row {
+    margin: 1rem 1rem 2rem;
+    border: 1px solid darkblue;
+}
+
+.main_summary {
+    padding: 0.2rem 0.5rem;
+    font-size: 1.2rem;
+    font-weight: bold;
+}

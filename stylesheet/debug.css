@@ -1,0 +1,102 @@
+
+.debug_memory {
+    display: grid;
+    grid-template-rows: 3rem 1.5rem auto;
+    height: 10rem;
+    font-family: Consolas, Menlo, "Andale Mono", "Lucida Console", "Bitstream Vera Sans Mono", "Courier New", Courier, monospace;
+    overflow: hidden;
+    resize: vertical;
+}
+
+.debug_memory_row {
+    display: flex;
+    overflow-y: scroll;
+}
+
+.debug_memory_info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin: 0.5rem 1.5rem;
+    padding: 0 0.5rem;
+    border-bottom: 1px solid black;
+}
+
+.debug_memory_linenumber {
+    width: 7rem;
+    text-align: right;
+}
+
+.debug_memory_linenumber>span {
+    display: inline-block;
+    height: 1.5rem;
+}
+
+.debug_memory_grid {
+    display: grid;
+    width: 100%;
+    padding: 0 0.5rem;
+    grid-template-columns: repeat(16, 1fr);
+    grid-auto-rows: 1.5rem;
+}
+
+.debug_memory_grid>span {
+    text-align: center;
+}
+
+
+.debug_input {
+    display: flex;
+    margin: 0.5rem;
+    padding: 0.2rem;
+    border-width: 0.1rem;
+    border-color: dimgray;
+    border-top-style: solid;
+    border-bottom-style: solid;
+    overflow-x: auto;
+    font-family: Consolas, Menlo, "Andale Mono", "Lucida Console", "Bitstream Vera Sans Mono", "Courier New", Courier, monospace;
+}
+
+.debug_input>span {
+    padding: 0.1rem 0.7rem;
+}
+
+
+.debug_gray {
+    color: dimgray;
+}
+
+.debug_hoverable>span {
+    border: 1px solid transparent;
+}
+
+.debug_hoverable>span:hover {
+    background-color: lightpink;
+    border-color: red;
+}
+
+
+.debug_icon::before {
+    font-family: "Material Icons";
+}
+
+.debug_icon.run::before {
+    content: "\e037";
+}
+
+.debug_icon.pause::before {
+    content: "\e034";
+}
+
+.debug_icon.stop::before {
+    content: "\e047";
+}
+
+.debug_icon.step::before {
+    content: "\e044";
+}
+
+.debug_icon.previous::before {
+    content: "\e045";
+}
