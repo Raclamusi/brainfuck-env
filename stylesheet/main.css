@@ -28,3 +28,11 @@
     font-size: 1.2rem;
     font-weight: bold;
 }
+
+.main_links {
+    margin: 0.5rem 1rem;
+}
+
+.main_links>a {
+    margin: 0 1rem;
+}

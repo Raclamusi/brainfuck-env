@@ -1,8 +1,24 @@
 
+.debug_buttons {
+    margin: 0 1rem 0.3rem;
+    padding: 0 0.3rem;
+    border-bottom: 1px solid black;
+}
+
+.debug_buttons>button {
+    margin: 0.2rem;
+    padding: 0.1rem 0.3rem;
+}
+
+.debug_status {
+    margin: 0.6rem 1.6rem;
+}
+
+
 .debug_memory {
     display: grid;
     grid-template-rows: 3rem 1.5rem auto;
-    height: 10rem;
+    height: 30rem;
     font-family: Consolas, Menlo, "Andale Mono", "Lucida Console", "Bitstream Vera Sans Mono", "Courier New", Courier, monospace;
     overflow: hidden;
     resize: vertical;
@@ -59,6 +75,8 @@
 }
 
 .debug_input>span {
+    display: inline-block;
+    height: 1.6rem;
     padding: 0.1rem 0.7rem;
 }
 
@@ -72,13 +90,18 @@
 }
 
 .debug_hoverable>span:hover {
-    background-color: lightpink;
-    border-color: red;
+    background-color: #dfd;
+}
+
+.debug_hoverable>span.active {
+    background-color: #bfb;
+    border-color: #0f0;
 }
 
 
 .debug_icon::before {
     font-family: "Material Icons";
+    vertical-align: text-top;
 }
 
 .debug_icon.run::before {

@@ -18,9 +18,9 @@
 .editor_pre {
     width: 100%;
     height: 10rem;
-    padding: 0.3rem;
+    padding: 0.3rem 0.6rem;
     color: #ddd;
-    background-color: black;
+    background-color: #222;
     overflow: auto;
     font: inherit;
     resize: vertical;
@@ -29,9 +29,37 @@
 .editor_textarea {
     width: 100%;
     height: 10rem;
-    padding: 0.3rem;
+    padding: 0.3rem 0.4rem;
     font: inherit;
     resize: vertical;
+}
+
+.editor_settings {
+    margin: 0 1rem 0.5rem;
+}
+
+.editor_option {
+    margin: 0.1rem 0;
+}
+
+.editor_option>label {
+    display: inline-flex;
+    align-items: center;
+    min-width: 50%;
+    white-space: nowrap;
+}
+
+.editor_option>label::after {
+    content: "";
+    display: inline-block;
+    width: 100%;
+    height: 1px;
+    margin: 0 0.2rem;
+    background-color: black;
+}
+
+.editor_option>select {
+    width: 40%;
 }
 
 
