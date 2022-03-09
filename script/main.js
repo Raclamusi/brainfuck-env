@@ -15,7 +15,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const optionIndentSize = document.getElementById("option_indentsize");
     const optionTabSize = document.getElementById("option_tabsize");
     const optionEcho = document.getElementById("option_echo");
-    const optionEscape = document.getElementById("option_escape");
 
     // デバッグ
     const runButton = document.getElementById("run");
@@ -44,7 +43,6 @@ document.addEventListener("DOMContentLoaded", () => {
         save("indentsize", 4);
         save("tabsize", 4);
         save("echo", true);
-        save("escape", false);
     }
 
     // エディタの設定
@@ -97,15 +95,11 @@ document.addEventListener("DOMContentLoaded", () => {
     optionEcho.addEventListener("change", event => {
         save("echo", event.target.value === "valid");
     });
-    optionEscape.addEventListener("change", event => {
-        save("escape", event.target.value === "valid");
-    });
     optionEof.value = load("eof");
     optionIndent.value = load("indent");
     optionIndentSize.value = load("indentsize");
     optionTabSize.value = load("tabsize");
     optionEcho.value = load("echo") ? "valid" : "invalid";
-    optionEscape.value = load("escape") ? "valid" : "invalid";
 
     // デバッグの設定
 
