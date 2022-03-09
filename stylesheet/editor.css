@@ -19,11 +19,24 @@
     width: 100%;
     height: 10rem;
     padding: 0.3rem 0.6rem;
-    color: #ddd;
-    background-color: #222;
+    color: #bbb;
+    background-color: #111;
     overflow: auto;
     font: inherit;
     resize: vertical;
+}
+
+.editor_pre>span {
+    animation-name: blink;
+    animation-timing-function: ease-in;
+    animation-iteration-count: infinite;
+    animation-direction: alternate;
+}
+
+@keyframes blink {
+    to {
+        color: transparent;
+    }
 }
 
 .editor_textarea {
