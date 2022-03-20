@@ -136,7 +136,11 @@ class MemoryEditor {
         const index = this.#memoryDiv.childElementCount;
         const span = document.createElement("span");
         span.textContent = this.#getDefaultContent(index);
-        span.addEventListener("click", () => this.#selectSpan(index));
+        span.addEventListener("click", e => {
+            return this.#selectSpan(
+                this.memory instanceof Uint8Array ? index : [...this.#memoryDiv.children].indexOf(span)
+            );
+        });
         this.#memoryDiv.appendChild(span);
     }
 
