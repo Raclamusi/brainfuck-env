@@ -63,7 +63,6 @@
 
 
 .debug_input {
-    display: flex;
     margin: 0.5rem;
     padding: 0.2rem;
     border-width: 0.1rem;
@@ -72,12 +71,14 @@
     border-bottom-style: solid;
     overflow-x: auto;
     font-family: Consolas, Menlo, "Andale Mono", "Lucida Console", "Bitstream Vera Sans Mono", "Courier New", Courier, monospace;
+    white-space: nowrap;
 }
 
 .debug_input>span {
     display: inline-block;
-    height: 1.6rem;
-    padding: 0.1rem 0.7rem;
+    width: 2.5rem;
+    padding: 0.1rem 0;
+    text-align: center;
 }
 
 
@@ -85,17 +86,31 @@
     color: dimgray;
 }
 
-.debug_hoverable>span {
+.debug_cells>span {
     border: 1px solid transparent;
 }
 
-.debug_hoverable>span:hover {
+.debug_cells>span:hover {
     background-color: #dfd;
 }
 
-.debug_hoverable>span.active {
+.debug_cells>span.selected {
     background-color: #bfb;
     border-color: #0f0;
+}
+
+.debug_cells>span.active {
+    background-color: #fbb;
+    border-color: #f00;
+}
+
+.debug_cells>span>input {
+    width: 100%;
+    border: none;
+    outline: none;
+    background-color: transparent;
+    font: inherit;
+    text-align: inherit;
 }
 
 
