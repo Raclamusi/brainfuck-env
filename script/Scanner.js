@@ -13,7 +13,7 @@ class Scanner {
     constructor(textarea, bufferDiv) {
         this.#textarea = textarea;
         this.#editor = new MemoryEditor([], bufferDiv);
-        this.#editor.setExpandMemoryFunc(() => {
+        this.#editor.setFunctionToExpandMemory(() => {
             this.#editor.memory.push(0);
             this.#editor.pushSpan();
         });

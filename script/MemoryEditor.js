@@ -10,6 +10,8 @@ class MemoryEditor {
     #selectedIndex = -1;
     /** @type {() => void} */
     #expandMemory = null;
+    /** @type {(index: number) => void} */
+    #onRightClick = null;
 
     /**
      * @param {number[] | Uint8Array} memory
@@ -54,8 +56,13 @@ class MemoryEditor {
     }
 
     /** @param {() => void} func */
-    setExpandMemoryFunc(func) {
+    setFunctionToExpandMemory(func) {
         this.#expandMemory = func;
+    }
+
+    /** @paarm {(index: number) => void} */
+    setFunctionOnRightClick(func) {
+        this.#onRightClick = func;
     }
 
     /** @param {number} index */
@@ -136,10 +143,15 @@ class MemoryEditor {
         const index = this.#memoryDiv.childElementCount;
         const span = document.createElement("span");
         span.textContent = this.#getDefaultContent(index);
-        span.addEventListener("click", e => {
-            return this.#selectSpan(
-                this.memory instanceof Uint8Array ? index : [...this.#memoryDiv.children].indexOf(span)
-            );
+        const getIndex = () => this.memory instanceof Uint8Array ? index : [...this.#memoryDiv.children].indexOf(span);
+        span.addEventListener("click", () => {
+            this.#selectSpan(getIndex());
+        });
+        span.addEventListener("contextmenu", e => {
+            if (this.#onRightClick !== null) {
+                e.preventDefault();
+                this.#onRightClick(getIndex());
+            }
         });
         this.#memoryDiv.appendChild(span);
     }
