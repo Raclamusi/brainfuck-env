@@ -38,7 +38,7 @@ class MemoryEditor {
                 if (this.#selectedIndex < 0) return;
                 const maxIndex = this.#memoryDiv.childElementCount - 1;
                 if (this.#selectedIndex >= maxIndex) return;
-                this.#selectSpan(colNum > 0 ? Math.min(maxIndex, this.#selectedIndex - colNum) : maxIndex);
+                this.#selectSpan(colNum > 0 ? Math.min(maxIndex, this.#selectedIndex + colNum) : maxIndex);
             },
         };
         addEventListener("keydown", e => {
@@ -117,7 +117,7 @@ class MemoryEditor {
     resetDiv(hard = false) {
         const n = Math.min(this.#memoryDiv.childElementCount, this.memory.length);
         for (let i = 0; i < n; i++) {
-            this.#memoryDiv.children[i].textContent = this.memory[i];
+            this.#memoryDiv.children[i].textContent = toHex(this.memory[i], 2);
         }
         for (let i = n; i < this.#memoryDiv.childElementCount; i++) {
             if (hard) {
