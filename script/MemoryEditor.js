@@ -72,6 +72,10 @@ class MemoryEditor {
 
     /** @param {number} index */
     #selectSpan(index) {
+        if (this.#selectedIndex === index) {
+            this.#memoryDiv.children[index].firstElementChild.select();
+            return;
+        }
         if (this.#selectedIndex >= 0) {
             this.#unselectSpan();
         }
@@ -110,7 +114,6 @@ class MemoryEditor {
         span.textContent = "";
         span.appendChild(input);
         input.focus();
-        
     }
 
     #unselectSpan() {
@@ -119,6 +122,7 @@ class MemoryEditor {
         const span = this.#memoryDiv.children[this.#selectedIndex];
         span.textContent = this.#getDefaultContent(index);
         span.classList.remove("selected");
+        this.#selectedIndex = -1;
     }
 
     resetDiv(hard = false) {
@@ -137,6 +141,14 @@ class MemoryEditor {
         for (let i = n; i < this.memory.length; i++) {
             this.pushSpan();
         }
+    }
+
+    /** @param {number} index */
+    updateSpan(index) {
+        if (index >= this.memory.length) return;
+        if (index === this.#selectedIndex) return;
+        this.#memoryDiv.children[index].textContent =
+            index < this.#memoryDiv.childElementCount ?  toHex(this.memory[index], 2) : "\xa0\xa0";
     }
 
     pushSpan() {
