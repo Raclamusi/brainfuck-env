@@ -61,6 +61,17 @@
     text-align: center;
 }
 
+.debug_pointer {
+    display: inline-block;
+    width: 8rem;
+}
+
+.debug_pointer>input {
+    width: 100%;
+    border: none;
+    font: inherit;
+}
+
 
 .debug_input {
     margin: 0.5rem;
