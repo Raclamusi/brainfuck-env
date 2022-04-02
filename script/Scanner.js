@@ -5,18 +5,21 @@ class Scanner {
     #textarea;
     /** @type {MemoryEditor} */
     #editor;
+    /** @type {number} */
+    #eof;
 
     /**
      * @param {HTMLTextAreaElement} textarea
      * @param {HTMLDivElement} bufferDiv
      */
-    constructor(textarea, bufferDiv) {
+    constructor(textarea, bufferDiv, eof = 255) {
         this.#textarea = textarea;
         this.#editor = new MemoryEditor([], bufferDiv);
         this.#editor.setFunctionToExpandMemory(() => {
             this.#editor.memory.push(0);
             this.#editor.pushSpan();
         });
+        this.eof = eof;
     }
 
     reset() {
@@ -31,5 +34,12 @@ class Scanner {
             this.#editor.popSpan();
         }
         return this.#editor.memory.shift() ?? load("eof");
+    }
+
+    get eof() {
+        return this.#eof;
+    }
+    set eof(value) {
+        this.#eof = isFinite(value) ? Math.floor(value) - 256 * Math.floor(value / 256) : 255;
     }
 }
