@@ -43,9 +43,13 @@ class MemoryEditor {
                 this.#selectSpan(colNum > 0 ? Math.min(maxIndex, this.#selectedIndex + colNum) : maxIndex);
             },
         };
+        let waiting = false;
         addEventListener("keydown", e => {
             if (this.#selectedIndex < 0) return;
             if (!(e.code in moveCursor)) return;
+            if (waiting) return;
+            waiting = true;
+            setTimeout(() => waiting = false, 0);
             e.preventDefault();
             moveCursor[e.code]();
         });
