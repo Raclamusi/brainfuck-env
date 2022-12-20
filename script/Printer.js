@@ -334,6 +334,6 @@ class Printer {
     }
 
     #setDecoration() {
-        this.#span.style.textDecorationLine = `${this.#underline ? "underline" : ""} ${this.#lineThrough ? "line-through" : ""}`
+        this.#span.style.textDecorationLine = `${this.#underline ? "underline" : ""} ${this.#lineThrough ? "line-through" : ""}`;
     }
 }
