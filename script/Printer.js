@@ -244,7 +244,7 @@ class Printer {
                     this.#fgColor = 256;
                     this.#setColor();
                 }
-                else  if (p1 === 5) {
+                else if (p1 === 5) {
                     // 拡張文字色を設定
                     const p2 = args.shift() ?? 0;
                     if (p2 >= 0 && p2 < 256) {
@@ -272,7 +272,7 @@ class Printer {
                     this.#bgColor = 257;
                     this.#setColor();
                 }
-                else  if (p1 === 5) {
+                else if (p1 === 5) {
                     // 拡張背景色の設定
                     const p2 = args.shift() ?? 0;
                     if (p2 >= 0 && p2 < 256) {
