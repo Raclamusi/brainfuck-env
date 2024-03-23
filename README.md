@@ -1,4 +1,6 @@
-# ぼくの考えた最強の Brainfuck 環境
+# RacBrainfuck
+
+ぼくの考えた最強の Brainfuck 環境です。
 
 ## 仕様
 
