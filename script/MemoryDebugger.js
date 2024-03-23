@@ -106,10 +106,10 @@ class MemoryDebugger {
     update() {
         this.#editor.resetDiv();
         this.#updateLineNumbers();
-        this.#pointerSpan.textContent = toHex(this.#pointer, 8);
-        this.#memoryDiv.children[this.#activePointer]?.classList.remove("active");
-        this.#memoryDiv.children[this.#pointer]?.classList.add("active");
-        this.#activePointer = this.#pointer;
+        const updateState = this.#updateState;
+        this.#updateState = true;
+        this.setPointer(this.#pointer);
+        this.#updateState = updateState;
     }
 
     getPointer() {
