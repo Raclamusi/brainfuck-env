@@ -64,7 +64,7 @@ class MemoryEditor {
         this.#expandMemory = func;
     }
 
-    /** @paarm {(index: number) => void} */
+    /** @param {(index: number) => void} */
     setFunctionOnRightClick(func) {
         this.#onRightClick = func;
     }

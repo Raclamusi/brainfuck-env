@@ -45,3 +45,11 @@ function encodeUTF8(str) {
 function decodeUTF8(arr) {
     return Encoding.convert(arr, { from: "UTF8", to: "Unicode", type: "string" });
 }
+
+/**
+ * @param {number} ms
+ * @returns {Promise<void>}
+ */
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(() => resolve(), ms));
+}

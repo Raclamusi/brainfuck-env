@@ -13,6 +13,7 @@ class MemoryDebugger {
     #editor;
     #pointer = 0;
     #updateState = true;
+    #activePointer = 0;
 
     /**
      * @param {HTMLDivElement} memoryDiv
@@ -55,8 +56,17 @@ class MemoryDebugger {
         return this.#editor.memory.length;
     }
 
-    expand() {
-        const newMemory = new Uint8Array(this.#editor.memory.length + 0x1000);
+    expand(newLength = 0) {
+        if (newLength === 0) {
+            newLength = this.#editor.memory.length + 0x1000;
+        }
+        else if (newLength <= this.#editor.memory.length) {
+            return;
+        }
+        else {
+            newLength = (newLength + 0xfff) & ~0xfff;
+        }
+        const newMemory = new Uint8Array(newLength);
         for (const [i, cell] of this.#editor.memory.entries()) {
             newMemory[i] = cell;
         }
@@ -65,6 +75,18 @@ class MemoryDebugger {
             this.#editor.resetDiv();
             this.#updateLineNumbers();
         }
+    }
+
+    expandUnchecked(newLength) {
+        if (newLength <= this.#editor.memory.length) {
+            return;
+        }
+        newLength = (newLength + 0xfff) & ~0xfff;
+        const newMemory = new Uint8Array(newLength);
+        for (const [i, cell] of this.#editor.memory.entries()) {
+            newMemory[i] = cell;
+        }
+        this.#editor.memory = newMemory;
     }
 
     /** @param {boolean} state */
@@ -85,7 +107,9 @@ class MemoryDebugger {
         this.#editor.resetDiv();
         this.#updateLineNumbers();
         this.#pointerSpan.textContent = toHex(this.#pointer, 8);
+        this.#memoryDiv.children[this.#activePointer]?.classList.remove("active");
         this.#memoryDiv.children[this.#pointer]?.classList.add("active");
+        this.#activePointer = this.#pointer;
     }
 
     getPointer() {
@@ -94,28 +118,39 @@ class MemoryDebugger {
 
     /** @param {number} value */
     setPointer(value, error = false) {
-        this.#memoryDiv.children[this.#pointer]?.classList.remove("active");
         if (isFinite(value) && value >= 0 && value < this.#editor.memory.length) {
             this.#pointer = value;
+            if (this.#updateState) {
+                const span = this.#memoryDiv.children[this.#pointer];
+                this.#memoryDiv.children[this.#activePointer]?.classList.remove("active");
+                span?.classList.add("active");
+                this.#activePointer = this.#pointer;
+                this.#pointerSpan.textContent = toHex(this.#pointer, 8);
+                if (this.#autoscrollInput.checked && span !== undefined && this.#memoryDiv.parentElement !== null) {
+                    const memHeight = this.#memoryDiv.offsetHeight;
+                    const memTop = this.#memoryDiv.parentElement.scrollTop;
+                    const memBottom = memTop + memHeight;
+                    const cellHeight = span.offsetHeight;
+                    const cellTop = span.offsetTop - this.#memoryDiv.offsetTop;
+                    const cellBottom = cellTop + cellHeight;
+                    if (cellTop <= memTop || cellBottom >= memBottom) {
+                        this.#memoryDiv.parentElement.scrollTo(0, cellTop - (memHeight - cellHeight) / 2);
+                    }
+                }
+            }
         }
         else if (error) {
             throw new BrainfuckError("pointerOutOfRange");
         }
-        if (this.#updateState) {
-            const span = this.#memoryDiv.children[this.#pointer];
-            span?.classList.add("active");
-            this.#pointerSpan.textContent = toHex(this.#pointer, 8);
-            if (this.#autoscrollInput.checked && span !== undefined && this.#memoryDiv.parentElement !== null) {
-                const memHeight = this.#memoryDiv.offsetHeight;
-                const memTop = this.#memoryDiv.parentElement.scrollTop;
-                const memBottom = memTop + memHeight;
-                const cellHeight = span.offsetHeight;
-                const cellTop = span.offsetTop - this.#memoryDiv.offsetTop;
-                const cellBottom = cellTop + cellHeight;
-                if (cellTop <= memTop || cellBottom >= memBottom) {
-                    this.#memoryDiv.parentElement.scrollTo(0, cellTop - (memHeight - cellHeight) / 2);
-                }
-            }
+    }
+
+    /** @param {number} value */
+    setPointerUnchecked(value, error = false) {
+        if (value >= 0 && value < this.#editor.memory.length) {
+            this.#pointer = value;
+        }
+        else if (error) {
+            throw new BrainfuckError("pointerOutOfRange");
         }
     }
 
@@ -141,6 +176,11 @@ class MemoryDebugger {
         }
     }
 
+    /** @param {number} value */
+    addUnchecked(value) {
+        this.#editor.memory[this.#pointer] += value;
+    }
+
     inc() {
         this.#editor.memory[this.#pointer]++;
         if (this.#updateState) {
@@ -153,6 +193,21 @@ class MemoryDebugger {
         if (this.#updateState) {
             this.#editor.updateSpan(this.#pointer);
         }
+    }
+
+    /** @param {number} value */
+    advance(value) {
+        if (!isFinite(value)) return;
+        const newPointer = this.#pointer + value;
+        this.expand(newPointer + 1);
+        this.setPointer(newPointer, true);
+    }
+
+    /** @param {number} value */
+    advanceUnchecked(value) {
+        const newPointer = this.#pointer + value;
+        this.expandUnchecked(newPointer + 1);
+        this.setPointerUnchecked(newPointer, true);
     }
 
     next() {

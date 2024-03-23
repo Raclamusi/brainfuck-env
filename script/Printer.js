@@ -130,6 +130,10 @@ class Printer {
         this.#outputPre.scrollTo({ top: this.#outputPre.scrollHeight - this.#outputPre.offsetHeight });
     }
 
+    isNewLine() {
+        return this.#buffers[0].length === 0;
+    }
+
     /** @param {number[]} sequence */
     #changeStyle(sequence) {
         // エスケープシーケンスによって span のスタイルをを変更する
@@ -200,6 +204,7 @@ class Printer {
                 // 太文字と低輝度を解除
                 this.#highLum = false;
                 this.#lowLum = false;
+                this.#span.style.fontWeight = "";
                 this.#setColor();
             }
             else if (p === 23) {

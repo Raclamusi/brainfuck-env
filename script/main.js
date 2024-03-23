@@ -8,6 +8,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const input = document.getElementById("input");
     const outputCopy = document.getElementById("output_copy");
     const output = document.getElementById("output");
+    const ibuffer = document.getElementById("ibuffer");
 
     // 設定
     const optionEof = document.getElementById("option_eof");
@@ -21,16 +22,15 @@ document.addEventListener("DOMContentLoaded", () => {
     const stopButton = document.getElementById("stop");
     const nodebugButton = document.getElementById("nodebug");
     const stepButton = document.getElementById("step");
-    const nextButton = document.getElementById("next");
-    const finishButton = document.getElementById("finish");
     const untilButton = document.getElementById("until");
-    const previousButton = document.getElementById("previous");
-    const macroButton = document.getElementById("macro");
+    const debugStatus = document.getElementById("status");
 
     // メモリ
-    const memory = document.getElementById("memory");
     const pointer = document.getElementById("pointer");
     const memoryAutoScroll = document.getElementById("memory_autoscroll");
+    const memoryExpand = document.getElementById("memory_expand");
+    const memlines = document.getElementById("memlines");
+    const memcells = document.getElementById("memcells");
 
 
     // 初期設定
@@ -66,6 +66,8 @@ document.addEventListener("DOMContentLoaded", () => {
     // 入出力の設定
     input.style.tabSize = load("tabsize");
     output.style.tabSize = load("tabsize");
+    const scanner = new Scanner(input, ibuffer, load("eof"));
+    const printer = new Printer(output);
 
     // コピーボタンの設定
     editorCopy.addEventListener("click", () => writeToClipboard(editor.getValue()));
@@ -74,7 +76,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // 設定の設定
     optionEof.addEventListener("change", event => {
-        save("eof", event.target.value === "0" ? 0 : 255);
+        const value = event.target.value === "0" ? 0 : 255;
+        save("eof", value);
+        scanner.eof = value;
     });
     optionIndent.addEventListener("change", event => {
         save("indent", event.target.value);
@@ -101,9 +105,57 @@ document.addEventListener("DOMContentLoaded", () => {
     optionTabSize.value = load("tabsize");
     optionEcho.value = load("echo") ? "valid" : "invalid";
 
-    // デバッグの設定
-
-
     // メモリの設定
+    const memory = new MemoryDebugger(memcells, memlines, pointer, memoryAutoScroll, memoryExpand);
 
+    // デバッグの設定
+    const bfDebugger = new BrainfuckDebugger(editor, scanner, printer, memory, debugStatus);
+    const changeToStart = () => {
+        runButton.textContent = "実行";
+        runButton.classList.remove("pause");
+        runButton.classList.add("run");
+    };
+    const changeToPause = () => {
+        runButton.textContent = "停止";
+        runButton.classList.remove("run");
+        runButton.classList.add("pause");
+    };
+    const changeToRestart = () => {
+        runButton.textContent = "再開";
+        runButton.classList.remove("pause");
+        runButton.classList.add("run");
+    };
+    runButton.addEventListener("click", () => {
+        switch (runButton.textContent) {
+            case "実行":
+                bfDebugger.start().finally(() => changeToStart());
+                changeToPause();
+                break;
+            case "停止":
+                bfDebugger.pause();
+                changeToRestart();
+                break;
+            case "再開":
+                bfDebugger.restart();
+                changeToPause();
+                break;
+            default:
+                changeToStart();
+                break;
+        }
+    });
+    stopButton.addEventListener("click", () => {
+        bfDebugger.stop();
+    });
+    nodebugButton.addEventListener("click", () => {
+        bfDebugger.startSync();
+    });
+    stepButton.addEventListener("click", () => {
+        bfDebugger.step();
+        changeToRestart();
+    });
+    untilButton.addEventListener("click", () => {
+        bfDebugger.until();
+        changeToRestart();
+    });
 });

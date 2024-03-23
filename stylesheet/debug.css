@@ -127,6 +127,7 @@
 
 .debug_icon::before {
     font-family: "Material Icons";
+    font-size: 1.2em;
     vertical-align: text-top;
 }
 
@@ -148,4 +149,9 @@
 
 .debug_icon.previous::before {
     content: "\e045";
+}
+
+
+.debug_editor_marker {
+    background-color: #fb0;
 }

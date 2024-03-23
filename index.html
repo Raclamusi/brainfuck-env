@@ -35,6 +35,8 @@
     <script type="text/javascript" src="script/Scanner.js"></script>
     <script type="text/javascript" src="script/MemoryDebugger.js"></script>
     <script type="text/javascript" src="script/MemoryMarker.js"></script>
+    <script type="text/javascript" src="script/BrainfuckNodeType.js"></script>
+    <script type="text/javascript" src="script/BrainfuckDebugger.js"></script>
     <script type="text/javascript" src="script/main.js"></script>
 </head>
 <body>
@@ -130,7 +132,7 @@
                 <div class="main_links">
                     <a href="https://github.com/Raclamusi/brainfuck-env/blob/master/README.md" target="_blank">仕様</a>
                     <a href="https://github.com/Raclamusi/brainfuck-env" target="_blank">GitHub</a>
-                    <a href="https://twitter.com/raclamusi" target="_blank">作者のTwitter</a>
+                    <a href="https://twitter.com/raclamusi" target="_blank">Twitter</a>
                 </div>
             </div>
         </div>
@@ -144,13 +146,7 @@
                 </div>
                 <div class="debug_buttons">
                     <button id="step" class="debug_icon step">ステップ実行</button>
-                    <button id="next">ステップ実行（マクロを飛ばす）</button>
-                    <button id="finish">マクロを出るまで実行</button>
                     <button id="until">ループを出るまで実行</button>
-                    <button id="previous" class="debug_icon previous">逆向きステップ実行</button>
-                </div>
-                <div class="debug_buttons">
-                    <button id="macro">マクロを展開</button>
                 </div>
                 <div class="debug_status">
                     実行ステータス: <span id="status"></span>
