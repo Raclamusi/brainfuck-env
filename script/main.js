@@ -4,8 +4,10 @@ document.addEventListener("DOMContentLoaded", () => {
     // エディタ、入出力
     const editorCopy = document.getElementById("editor_copy");
     const editorTextarea = document.getElementById("editor");
+    const inputOuter = document.getElementById("input_outer");
     const inputCopy = document.getElementById("input_copy");
     const input = document.getElementById("input");
+    const outputOuter = document.getElementById("output_outer");
     const outputCopy = document.getElementById("output_copy");
     const output = document.getElementById("output");
     const ibuffer = document.getElementById("ibuffer");
@@ -38,6 +40,8 @@ document.addEventListener("DOMContentLoaded", () => {
         save("initialized", true);
         save("editor", "");
         save("input", "");
+        save("inputopen", true);
+        save("outputopen", true);
         save("eof", 255);
         save("indent", "tab");
         save("indentsize", 4);
@@ -54,8 +58,8 @@ document.addEventListener("DOMContentLoaded", () => {
         indentWithTabs: load("indent") !== "space",
         matchBrackets: true,
         autoCloseBrackets: true,
-        value: load("editor"),
     });
+    editor.setValue(load("editor"));
     editor.on("change", (_, change) => {
         if (load("indent") === "space" && change.origin === "+input" && change.text[0] === "\t") {
             const inc = pos => ({ line: pos.line, ch: pos.ch + 1 });
@@ -64,10 +68,33 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // 入出力の設定
+    input.value = load("input");
+    inputOuter.open = load("inputopen");
+    outputOuter.open = load("outputopen");
     input.style.tabSize = load("tabsize");
     output.style.tabSize = load("tabsize");
     const scanner = new Scanner(input, ibuffer, load("eof"));
     const printer = new Printer(output);
+    
+    // エディター、入力の保存
+    let saveId = null;
+    const saveEditors = () => {
+        save("editor", editor.getValue());
+        save("input", input.value);
+        save("inputopen", inputOuter.open);
+        save("outputopen", outputOuter.open);
+        clearTimeout(saveId);
+        saveId = null;
+    };
+    const requestSave = () => {
+        if (saveId === null) {
+            saveId = setTimeout(saveEditors, 10000);
+        }
+    };
+    editor.on("change", requestSave);
+    input.addEventListener("input", requestSave);
+    inputOuter.addEventListener("toggle", requestSave);
+    outputOuter.addEventListener("toggle", requestSave);
 
     // コピーボタンの設定
     editorCopy.addEventListener("click", () => writeToClipboard(editor.getValue()));
@@ -128,6 +155,7 @@ document.addEventListener("DOMContentLoaded", () => {
     runButton.addEventListener("click", () => {
         switch (runButton.textContent) {
             case "実行":
+                saveEditors();
                 bfDebugger.start().finally(() => changeToStart());
                 changeToPause();
                 break;
@@ -148,6 +176,7 @@ document.addEventListener("DOMContentLoaded", () => {
         bfDebugger.stop();
     });
     nodebugButton.addEventListener("click", () => {
+        saveEditors();
         bfDebugger.startSync();
     });
     stepButton.addEventListener("click", () => {
