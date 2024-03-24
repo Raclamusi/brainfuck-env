@@ -21,6 +21,24 @@ class BrainfuckDebugger {
     /** @type {BrainfuckNode[]} */
     #nodes;
 
+    #isRunning = false;
+    #currentLoopDepth = 0;
+    #pauseLoopDepth = -1;
+    
+    /** @type {() => void} */
+    #onPause = null;
+    /** @type {() => void} */
+    #onResume = null;
+    /** @type {() => void} */
+    #onFinish = null;
+
+    /** @type {() => void} */
+    #resolvePause = null;
+    /** @type {() => void} */
+    #resolveResume = null;
+    /** @type {() => void} */
+    #resolveStop = null;
+
     /**
      * @param {CodeMirror.Editor} editor 
      * @param {Scanner} scanner 
@@ -44,10 +62,10 @@ class BrainfuckDebugger {
     }
 
     /**
-     * @param {BrainfuckNode} node 
+     * @param {CodeMirror.TextMarker} marker 
      */
-    #markNode(node) {
-        const { from, to } = node.marker.find();
+    #markNode(marker) {
+        const { from, to } = marker.find();
         this.#editor.scrollIntoView({ from, to });
         return this.#editor.markText(from, to, { className: "debug_editor_marker" });
     }
@@ -189,6 +207,133 @@ class BrainfuckDebugger {
     }
 
     async start() {
+        if (this.#isRunning) {
+            return;
+        }
+
+        this.#reset();
+        const error = this.#compile();
+        if (error) {
+            this.#printer.print(error);
+            this.#statusSpan.textContent = "コンパイルエラー";
+            this.#statusSpan.style.color = "red";
+            return;
+        }
+
+        try {
+            this.#isRunning = true;
+            this.#currentLoopDepth = 0;
+            this.#statusSpan.textContent = "実行中";
+            this.#statusSpan.style.color = "";
+            if (this.#onResume) {
+                this.#onResume();
+            }
+
+            this.#memory.setUpdateState(false);
+            const echo = load("echo");
+            const yieldStep = 2_000_000;
+            let insns = yieldStep;
+            for (let pc = 0; pc < this.#nodes.length; ++pc, ++insns) {
+                if (this.#resolveStop) {
+                    this.#resolveStop();
+                    this.#resolveStop = null;
+                    break;
+                }
+                const { type, value, marker } = this.#nodes[pc];
+                if ((this.#resolvePause && this.#pauseLoopDepth < 0) || type === BrainfuckNodeType.Break) {
+                    if (this.#resolvePause) {
+                        this.#resolvePause();
+                        this.#resolvePause = null;
+                    }
+                    this.#statusSpan.textContent = "停止中";
+                    this.#memory.update();
+                    this.#printer.flush();
+                    this.#memory.setUpdateState(true);
+                    if (this.#onPause) {
+                        this.#onPause();
+                    }
+                    const markedMarker = this.#markNode(marker);
+                    await new Promise(resolve => {
+                        this.#resolveResume = resolve;
+                    });
+                    markedMarker.clear();
+                    this.#statusSpan.textContent = "実行中";
+                    this.#memory.setUpdateState(false);
+                    if (this.#onResume) {
+                        this.#onResume();
+                    }
+                }
+                else if (insns >= yieldStep) {
+                    insns = 0;
+                    this.#memory.update();
+                    this.#printer.flush();
+                    await sleep(0);
+                }
+                if (type === BrainfuckNodeType.Advance) {
+                    this.#memory.advance(value);
+                }
+                else if (type === BrainfuckNodeType.Add) {
+                    this.#memory.add(value);
+                }
+                else if (type === BrainfuckNodeType.Output) {
+                    this.#printer.put(this.#memory.get());
+                }
+                else if (type === BrainfuckNodeType.Input) {
+                    const c = this.#scanner.get();
+                    this.#memory.set(c);
+                    if (echo) {
+                        this.#printer.put(c);
+                    }
+                }
+                else if (type === BrainfuckNodeType.LoopBegin) {
+                    if (this.#memory.get() === 0) {
+                        pc = value;
+                    }
+                    else {
+                        ++this.#currentLoopDepth;
+                    }
+                }
+                else if (type === BrainfuckNodeType.LoopEnd) {
+                    if (this.#memory.get() !== 0) {
+                        pc = value;
+                    }
+                    else {
+                        --this.#currentLoopDepth;
+                        if (this.#currentLoopDepth === this.#pauseLoopDepth) {
+                            this.#pauseLoopDepth = -1;
+                        }
+                    }
+                }
+            }
+            this.#statusSpan.textContent = `実行完了`;
+            this.#statusSpan.style.color = "";
+        }
+        catch (e) {
+            if (e instanceof BrainfuckError) {
+                this.#runtimeError(e.message);
+            }
+        }
+        finally {
+            this.#isRunning = false;
+            this.#pauseLoopDepth = -1;
+            if (this.#resolvePause) {
+                this.#resolvePause();
+                this.#resolvePause = null;
+            }
+            if (this.#resolveResume) {
+                this.#resolveResume();
+                this.#resolveResume = null;
+            }
+            if (this.#resolveStop) {
+                this.#resolveStop();
+                this.#resolveStop = null;
+            }
+            this.#memory.update();
+            this.#memory.setUpdateState(true);
+            if (this.#onFinish) {
+                this.#onFinish();
+            }
+        }
     }
 
     async startSync() {
@@ -235,7 +380,6 @@ class BrainfuckDebugger {
                 }
             }
             const endTime = performance.now();
-            this.#memory.update();
             this.#printer.flush();
             this.#statusSpan.textContent = `実行完了 (${Math.round(endTime - startTime)} ms)`;
             this.#statusSpan.style.color = "";
@@ -246,27 +390,91 @@ class BrainfuckDebugger {
             }
         }
         finally {
+            this.#memory.update();
             this.#memory.setUpdateState(true);
         }
     }
 
-    pause() {
-
+    async pause() {
+        if (this.#resolvePause || this.#resolveStop) {
+            return;
+        }
+        await new Promise(resolve => {
+            this.#resolvePause = resolve;
+        });
     }
 
-    restart() {
-
+    resume() {
+        if (!this.#resolveResume || this.#resolveStop) {
+            return;
+        }
+        this.#resolveResume();
+        this.#resolveResume = null;
     }
 
-    stop() {
-        
+    async stop() {
+        if (!this.#isRunning || this.#resolveStop) {
+            return;
+        }
+        if (this.#resolvePause) {
+            this.#resolvePause();
+            this.#resolvePause = null;
+        }
+        if (this.#resolveResume) {
+            this.#resolveResume();
+            this.#resolveResume = null;
+        }
+        await new Promise(resolve => {
+            this.#resolveStop = resolve;
+        });
     }
 
-    step() {
-
+    async step() {
+        if (this.#isRunning) {
+            if (this.#resolvePause || !this.#resolveResume || this.#resolveStop) {
+                return;
+            }
+            const promise = this.pause();
+            this.resume();
+            await promise;
+        }
+        else {
+            const promise = this.pause();
+            this.start();
+            await promise;
+        }
     }
 
-    until() {
+    async until() {
+        if (!this.#isRunning || this.#resolvePause || !this.#resolveResume || this.#resolveStop) {
+            return;
+        }
+        this.#pauseLoopDepth = this.#currentLoopDepth - 1;
+        const promise = this.pause();
+        this.resume();
+        await promise;
+    }
 
+    isRunning() {
+        return this.#isRunning;
+    }
+
+    isInPause() {
+        return this.#resolveResume != null;
+    }
+
+    /** @param {() => void} func */
+    setFunctionOnPause(func) {
+        this.#onPause = func;
+    }
+
+    /** @param {() => void} func */
+    setFunctionOnResume(func) {
+        this.#onResume = func;
+    }
+    
+    /** @param {() => void} func */
+    setFunctionOnFinish(func) {
+        this.#onFinish = func;
     }
 }

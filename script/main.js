@@ -147,25 +147,25 @@ document.addEventListener("DOMContentLoaded", () => {
         runButton.classList.remove("run");
         runButton.classList.add("pause");
     };
-    const changeToRestart = () => {
+    const changeToResume = () => {
         runButton.textContent = "再開";
         runButton.classList.remove("pause");
         runButton.classList.add("run");
     };
+    bfDebugger.setFunctionOnPause(changeToResume);
+    bfDebugger.setFunctionOnResume(changeToPause);
+    bfDebugger.setFunctionOnFinish(changeToStart);
     runButton.addEventListener("click", () => {
         switch (runButton.textContent) {
             case "実行":
                 saveEditors();
-                bfDebugger.start().finally(() => changeToStart());
-                changeToPause();
+                bfDebugger.start();
                 break;
             case "停止":
                 bfDebugger.pause();
-                changeToRestart();
                 break;
             case "再開":
-                bfDebugger.restart();
-                changeToPause();
+                bfDebugger.resume();
                 break;
             default:
                 changeToStart();
@@ -181,10 +181,8 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     stepButton.addEventListener("click", () => {
         bfDebugger.step();
-        changeToRestart();
     });
     untilButton.addEventListener("click", () => {
         bfDebugger.until();
-        changeToRestart();
     });
 });
