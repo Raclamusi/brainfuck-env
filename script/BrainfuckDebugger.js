@@ -233,6 +233,8 @@ class BrainfuckDebugger {
             const echo = load("echo");
             const yieldStep = 2_000_000;
             let insns = yieldStep;
+            let elapsedTime = 0;
+            let startTime = performance.now();
             for (let pc = 0; pc < this.#nodes.length; ++pc, ++insns) {
                 if (this.#resolveStop) {
                     this.#resolveStop();
@@ -241,11 +243,12 @@ class BrainfuckDebugger {
                 }
                 const { type, value, marker } = this.#nodes[pc];
                 if ((this.#resolvePause && this.#pauseLoopDepth < 0) || type === BrainfuckNodeType.Break) {
+                    elapsedTime += performance.now() - startTime;
                     if (this.#resolvePause) {
                         this.#resolvePause();
                         this.#resolvePause = null;
                     }
-                    this.#statusSpan.textContent = "停止中";
+                    this.#statusSpan.textContent = `停止中 (${Math.floor(elapsedTime)} ms)`;
                     this.#memory.update();
                     this.#printer.flush();
                     this.#memory.setUpdateState(true);
@@ -257,14 +260,16 @@ class BrainfuckDebugger {
                         this.#resolveResume = resolve;
                     });
                     markedMarker.clear();
-                    this.#statusSpan.textContent = "実行中";
+                    this.#statusSpan.textContent = `実行中 (${Math.floor(elapsedTime)} ms)`;
                     this.#memory.setUpdateState(false);
                     if (this.#onResume) {
                         this.#onResume();
                     }
+                    startTime = performance.now();
                 }
                 else if (insns >= yieldStep) {
                     insns = 0;
+                    this.#statusSpan.textContent = `実行中 (${Math.floor(elapsedTime + (performance.now() - startTime))} ms)`;
                     this.#memory.update();
                     this.#printer.flush();
                     await sleep(0);
@@ -305,7 +310,8 @@ class BrainfuckDebugger {
                     }
                 }
             }
-            this.#statusSpan.textContent = `実行完了`;
+            elapsedTime += performance.now() - startTime;
+            this.#statusSpan.textContent = `実行完了 (${Math.floor(elapsedTime)} ms)`;
             this.#statusSpan.style.color = "";
         }
         catch (e) {
@@ -381,7 +387,7 @@ class BrainfuckDebugger {
             }
             const endTime = performance.now();
             this.#printer.flush();
-            this.#statusSpan.textContent = `実行完了 (${Math.round(endTime - startTime)} ms)`;
+            this.#statusSpan.textContent = `実行完了 (${Math.floor(endTime - startTime)} ms)`;
             this.#statusSpan.style.color = "";
         }
         catch (e) {
