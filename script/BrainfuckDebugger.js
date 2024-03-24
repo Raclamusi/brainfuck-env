@@ -5,6 +5,7 @@
  * @property {BrainfuckNodeType} type
  * @property {number} value
  * @property {CodeMirror.TextMarker} marker
+ * @property {{ command: string }=} commandValue
  */
 
 class BrainfuckDebugger {
@@ -16,6 +17,8 @@ class BrainfuckDebugger {
     #printer;
     /** @type {MemoryDebugger} */
     #memory;
+    /** @type {MemoryMarker} */
+    #memoryMarker;
     /** @type {HTMLSpanElement} */
     #statusSpan;
     /** @type {BrainfuckNode[]} */
@@ -44,13 +47,15 @@ class BrainfuckDebugger {
      * @param {Scanner} scanner 
      * @param {Printer} printer 
      * @param {MemoryDebugger} memory 
+     * @param {MemoryMarker} memoryMarker 
      * @param {HTMLSpanElement} statusSpan 
      */
-    constructor(editor, scanner, printer, memory, statusSpan) {
+    constructor(editor, scanner, printer, memory, memoryMarker, statusSpan) {
         this.#editor = editor;
         this.#scanner = scanner;
         this.#printer = printer;
         this.#memory = memory;
+        this.#memoryMarker = memoryMarker;
         this.#statusSpan = statusSpan;
         this.#nodes = [];
     }
@@ -76,17 +81,17 @@ class BrainfuckDebugger {
             marker.clear();
         }
 
-        const pushNode = (type, value, from, to) => {
-            this.#nodes.push({ type, value, marker: this.#editor.markText(from, to) });
+        const pushNode = (type, value, from, to, commandValue) => {
+            this.#nodes.push({ type, value, marker: this.#editor.markText(from, to), commandValue });
         };
 
         let error = "";
-        const addError = (line, ch, text) => {
+        const addError = (line, ch, text, size = 1) => {
             const lineNum = `${line + 1}`.padStart(4);
             const lineText = this.#editor.getLine(line);
             error += `\x1b[1m${line + 1}:${ch + 1}: \x1b[31merror: \x1b[39m${text}\x1b[22m\n`;
             error += ` ${lineNum} | ${lineText}\n`;
-            error += ` ${" ".repeat(lineNum.length)} | \x1b[32m${" ".repeat(ch)}^\x1b[39m\n`;
+            error += ` ${" ".repeat(lineNum.length)} | \x1b[32m${" ".repeat(ch)}^${"~".repeat(Math.max(0, size - 1))}\x1b[39m\n`;
         };
 
         /** @type {BrainfuckNodeType} */
@@ -96,17 +101,158 @@ class BrainfuckDebugger {
         let value = 0;
         const loopStack = [];
         const lineCount = this.#editor.lineCount();
+        const instructions = "><+-.,[]@!";
+        let command = "";
+        let commandNest = 0;
+        /** @type {[string, number][]} */
+        let commandArgs = [];
+        let commandValue = null;
         for (let line = 0; line < lineCount; ++line) {
             const text = this.#editor.getLine(line);
             for (let ch = 0; ch < text.length; ++ch) {
                 const c = text[ch];
 
-                // 認識しないコマンドは読み飛ばす
-                if (!"><+-.,[]@".includes(c)) {
+                // コマンドの処理
+                if (type === BrainfuckNodeType.Command) {
+                    // コマンド名が未検出
+                    if (commandNest === 0) {
+                        // 改行が入ったらコマンドではない
+                        if (line != from.line) {
+                            type = 0;
+                        }
+                        // コマンド名があって '(' が来たらコマンド
+                        else if (c === "(" && command.length) {
+                            commandNest = 1;
+                            commandArgs = [["", -1]];
+                            to = { line, ch };
+                            continue;
+                        }
+                        // そうでなく、記号でない文字が来たら継続
+                        else if (c.match(/\w/)) {
+                            command += c;
+                            continue;
+                        }
+                        // そうでなければコマンドではない
+                        else {
+                            type = 0;
+                        }
+                    }
+                    // コマンド名が検出済み
+                    else {
+                        // 改行が入ったらエラー
+                        if (line != from.line) {
+                            type = 0;
+                            addError(from.line, this.#editor.getLine(from.line).length, "expected ')'");
+                        }
+                        // Brainfuck の命令が入ったらエラー
+                        else if (instructions.includes(c)) {
+                            type = 0;
+                            addError(line, ch, "expected ')'");
+                        }
+                        // 最後の括弧ならコマンドを処理する
+                        else if (c === ")" && commandNest === 1) {
+                            if (!commandArgs.at(-1)[0]) {
+                                commandArgs.pop();
+                            }
+                            if (command === "mark") {
+                                if (commandArgs.length === 1) {
+                                    const [[name, nameCh]] = commandArgs;
+                                    if (!name.match(/^\w+$/)) {
+                                        type = 0;
+                                        addError(line, nameCh, "!mark(name): invalid name", name.length);
+                                    }
+                                    if (type) {
+                                        commandValue = { command, name };
+                                    }
+                                }
+                                else if (commandArgs.length === 4) {
+                                    const [[name, nameCh], [pos, posCh], [size, sizeCh], [color, colorCh]] = commandArgs;
+                                    if (!name.match(/^\w+$/)) {
+                                        type = 0;
+                                        addError(line, nameCh, "!mark(name pos size color): invalid name", name.length);
+                                    }
+                                    let pos2 = pos;
+                                    let isRelative = false;
+                                    if (pos2[0] === "~") {
+                                        isRelative = true;
+                                        pos2 = pos2.slice(1);
+                                    }
+                                    let posSign = 1;
+                                    if (pos2.length >= 2 && pos2[0] === "_") {
+                                        posSign = -1;
+                                        pos2 = pos2.slice(1);
+                                    }
+                                    let parsedPos = (pos2.length ? Number(pos2) * posSign : 0);
+                                    if (isNaN(parsedPos)) {
+                                        type = 0;
+                                        addError(line, posCh, "!mark(name pos size color): invalid pos", pos.length);
+                                    }
+                                    let size2 = size;
+                                    let sizeSign = 1;
+                                    if (size2.length >= 2 && size2[0] === "_") {
+                                        sizeSign = -1;
+                                        size2 = size2.slice(1);
+                                    }
+                                    let parsedSize = Number(size2);
+                                    if (isNaN(parsedSize)) {
+                                        type = 0;
+                                        addError(line, sizeCh, "!mark(name pos size color): invalid size", size.length);
+                                    }
+                                    if (sizeSign < 0) {
+                                        parsedPos -= parsedSize;
+                                    }
+                                    const color2 = color.replace("_", "-");
+                                    const div = document.createElement("div");
+                                    div.style.color = color2;
+                                    if (!div.style.color) {
+                                        type = 0;
+                                        addError(line, colorCh, "!mark(name pos size color): invalid color", color.length);
+                                    }
+                                    if (type) {
+                                        commandValue = { command, name, pos: parsedPos, isRelative, size: parsedSize, color: color2 };
+                                    }
+                                }
+                                else {
+                                    addError(line, to.ch, "expected 1 or 4 arguments to command '!mark'", ch - to.ch + 1);
+                                }
+                            }
+                            else {
+                                addError(line, from.ch, `unknown command '${command}'`, command.length);
+                            }
+                            to = { line, ch: ch + 1 };
+                        }
+                        else {
+                            const arg = commandArgs.at(-1);
+                            // 括弧の中でなく空白なら、引数を区切る
+                            if (commandNest === 1 && c.match(/\s/)) {
+                                if (arg[0]) {
+                                    commandArgs.push(["", -1]);
+                                }
+                            }
+                            // そうでなければ引数に追加
+                            else {
+                                if (!arg[0]) {
+                                    arg[1] = ch;
+                                }
+                                arg[0] += c;
+                            }
+                            // 開き括弧ならネストを1つ深くする
+                            if (c === "(") {
+                                ++commandNest;
+                            }
+                            else if (c === ")") {
+                                --commandNest;
+                            }
+                            continue;
+                        }
+                    }
+                }
+                // 認識しない命令は読み飛ばす
+                else if (!instructions.includes(c)) {
                     continue;
                 }
 
-                // 前のコマンドと同系統のコマンドである場合は、まとめて処理する
+                // 前の命令と同系統の命令である場合は、まとめて処理する
                 if (type === BrainfuckNodeType.Advance) {
                     if ("><".includes(c)) {
                         to = { line, ch: ch + 1 };
@@ -134,11 +280,16 @@ class BrainfuckDebugger {
                 }
 
                 // ノードを追加する
-                if (type) {
+                if (type === BrainfuckNodeType.Command) {
+                    if (commandValue) {
+                        pushNode(type, value, from, to, commandValue);
+                    }
+                }
+                else if (type) {
                     pushNode(type, value, from, to);
                 }
 
-                // 各コマンドの処理
+                // 各命令の処理
                 from = { line, ch };
                 to = { line, ch: ch + 1 };
                 if (c === ">") {
@@ -184,9 +335,23 @@ class BrainfuckDebugger {
                     type = BrainfuckNodeType.Break;
                     value = 0;
                 }
+                else if (c === "!") {
+                    type = BrainfuckNodeType.Command;
+                    value = 0;
+                    command = "";
+                    commandNest = 0;
+                }
+                else {
+                    type = 0;
+                }
             }
         }
-        if (type) {
+        if (type === BrainfuckNodeType.Command) {
+            if (commandValue) {
+                pushNode(type, value, from, to, commandValue);
+            }
+        }
+        else if (type) {
             pushNode(type, value, from, to);
         }
         for (const i of loopStack) {
@@ -212,6 +377,7 @@ class BrainfuckDebugger {
         }
 
         this.#reset();
+        this.#memoryMarker.reset();
         const error = this.#compile();
         if (error) {
             this.#printer.print(error);
@@ -308,6 +474,20 @@ class BrainfuckDebugger {
                         }
                     }
                 }
+                else if (type === BrainfuckNodeType.Command) {
+                    const { commandValue } = this.#nodes[pc];
+                    const { command } = commandValue;
+                    if (command === "mark") {
+                        const { name, pos, isRelative, size, color } = commandValue;
+                        if (size) {
+                            const pos2 = (isRelative ? this.#memory.getPointer() + pos : pos);
+                            this.#memoryMarker.addMark(name, pos2, size, color);
+                        }
+                        else {
+                            this.#memoryMarker.removeMark(name);
+                        }
+                    }
+                }
             }
             elapsedTime += performance.now() - startTime;
             this.#statusSpan.textContent = `実行完了 (${Math.floor(elapsedTime)} ms)`;
@@ -316,6 +496,10 @@ class BrainfuckDebugger {
         catch (e) {
             if (e instanceof BrainfuckError) {
                 this.#runtimeError(e.message);
+            }
+            else {
+                this.#runtimeError("不明なエラーです。");
+                console.error(e);
             }
         }
         finally {

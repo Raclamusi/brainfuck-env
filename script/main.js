@@ -134,9 +134,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // メモリの設定
     const memory = new MemoryDebugger(memcells, memlines, pointer, memoryAutoScroll, memoryExpand);
+    const memoryMarker = new MemoryMarker(memcells);
 
     // デバッグの設定
-    const bfDebugger = new BrainfuckDebugger(editor, scanner, printer, memory, debugStatus);
+    const bfDebugger = new BrainfuckDebugger(editor, scanner, printer, memory, memoryMarker, debugStatus);
     const changeToStart = () => {
         runButton.textContent = "実行";
         runButton.classList.remove("pause");

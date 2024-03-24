@@ -10,4 +10,5 @@ const BrainfuckNodeType = Object.freeze({
     LoopBegin: 5,
     LoopEnd: 6,
     Break: 7,
+    Command: 8,
 });
