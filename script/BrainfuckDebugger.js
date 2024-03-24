@@ -223,7 +223,6 @@ class BrainfuckDebugger {
         try {
             this.#isRunning = true;
             this.#currentLoopDepth = 0;
-            this.#statusSpan.textContent = "実行中";
             this.#statusSpan.style.color = "";
             if (this.#onResume) {
                 this.#onResume();
