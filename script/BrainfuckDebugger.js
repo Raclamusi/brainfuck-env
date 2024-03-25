@@ -577,6 +577,10 @@ class BrainfuckDebugger {
             if (e instanceof BrainfuckError) {
                 this.#runtimeError(e.message);
             }
+            else {
+                this.#runtimeError("不明なエラーです。");
+                console.error(e);
+            }
         }
         finally {
             this.#memory.update();
