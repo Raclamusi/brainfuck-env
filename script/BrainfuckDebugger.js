@@ -70,8 +70,12 @@ class BrainfuckDebugger {
      * @param {CodeMirror.TextMarker} marker 
      */
     #markNode(marker) {
-        const { from, to } = marker.find();
-        this.#editor.scrollIntoView({ from, to });
+        const range = marker.find();
+        if (!range) {
+            return null;
+        }
+        this.#editor.scrollIntoView(range);
+        const { from, to } = range;
         return this.#editor.markText(from, to, { className: "debug_editor_marker" });
     }
 
@@ -424,7 +428,7 @@ class BrainfuckDebugger {
                     await new Promise(resolve => {
                         this.#resolveResume = resolve;
                     });
-                    markedMarker.clear();
+                    markedMarker?.clear();
                     this.#statusSpan.textContent = `実行中 (${Math.floor(elapsedTime)} ms)`;
                     this.#memory.setUpdateState(false);
                     if (this.#onResume) {
