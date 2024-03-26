@@ -495,7 +495,7 @@ class BrainfuckDebugger {
             }
             elapsedTime += performance.now() - startTime;
             this.#statusSpan.textContent = `実行完了 (${Math.floor(elapsedTime)} ms)`;
-            this.#statusSpan.style.color = "";
+            this.#statusSpan.style.color = "blue";
         }
         catch (e) {
             if (e instanceof BrainfuckError) {
@@ -575,7 +575,7 @@ class BrainfuckDebugger {
             const endTime = performance.now();
             this.#printer.flush();
             this.#statusSpan.textContent = `実行完了 (${Math.floor(endTime - startTime)} ms)`;
-            this.#statusSpan.style.color = "";
+            this.#statusSpan.style.color = "blue";
         }
         catch (e) {
             if (e instanceof BrainfuckError) {
