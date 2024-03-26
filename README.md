@@ -30,6 +30,9 @@
     - `!mark(example2 ~ _0b101 rgb(255 192 203))` : 実行時のポインタの指す位置から見て [−5, 0) の範囲を `rgb(255 192 203)` に着色
   - <code><b>!mark(</b><i>name</i><b>)</b></code> : *name* で着色している範囲の色を消去します。
     - `!mark(example1)` : `example1` で着色した範囲の色を消去
+  - <code><b>!print(</b><i>message</i><b>)</b></code> : *message* を出力します。 *message* には JavaScript の文字列リテラルで使用できるエスケープシーケンスがそのまま使えます。
+    - `!print(Hello\x2c World\x21)` : `Hello, World!` を出力
+    - `!print(\x1b\x5b1;3;5;31;43m5000兆円\x1b\x5b37;100m欲しい！\x1b\x5bm)` : <code><i>5000兆円欲しい！</i></code> を出力
 
 ### 入出力
 

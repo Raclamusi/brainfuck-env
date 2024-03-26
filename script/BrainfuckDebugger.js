@@ -111,6 +111,8 @@ class BrainfuckDebugger {
         /** @type {[string, number][]} */
         let commandArgs = [];
         let commandValue = null;
+        /** @type {[string, number]} */
+        let commandRawArgs = [];
         for (let line = 0; line < lineCount; ++line) {
             const text = this.#editor.getLine(line);
             for (let ch = 0; ch < text.length; ++ch) {
@@ -128,6 +130,7 @@ class BrainfuckDebugger {
                         else if (c === "(" && command.length) {
                             commandNest = 1;
                             commandArgs = [["", -1]];
+                            commandRawArgs = ["", ch + 1];
                             to = { line, ch };
                             continue;
                         }
@@ -220,12 +223,26 @@ class BrainfuckDebugger {
                                     addError(line, to.ch, "expected 1 or 4 arguments to command '!mark'", ch - to.ch + 1);
                                 }
                             }
+                            else if (command === "print") {
+                                const [message, messageCh] = commandRawArgs;
+                                try {
+                                    const parsedMessage = eval(`"${message.replaceAll('"', '\\"')}"`);
+                                    if (type) {
+                                        commandValue = { command, message: parsedMessage };
+                                    }
+                                }
+                                catch {
+                                    type = 0;
+                                    addError(line, messageCh, "!print(message): invalid message", message.length);
+                                }
+                            }
                             else {
                                 addError(line, from.ch, `unknown command '${command}'`, command.length);
                             }
                             to = { line, ch: ch + 1 };
                         }
                         else {
+                            commandRawArgs[0] += c;
                             const arg = commandArgs.at(-1);
                             // 括弧の中でなく空白なら、引数を区切る
                             if (commandNest === 1 && c.match(/\s/)) {
@@ -490,6 +507,10 @@ class BrainfuckDebugger {
                         else {
                             this.#memoryMarker.removeMark(name);
                         }
+                    }
+                    else if (command === "print") {
+                        const { message } = commandValue;
+                        this.#printer.println(message);
                     }
                 }
             }
