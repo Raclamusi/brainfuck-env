@@ -205,7 +205,7 @@ class BrainfuckDebugger {
                                     if (sizeSign < 0) {
                                         parsedPos -= parsedSize;
                                     }
-                                    const color2 = color.replace("_", "-");
+                                    const color2 = color.replaceAll("_", "-");
                                     const div = document.createElement("div");
                                     div.style.color = color2;
                                     if (!div.style.color) {
