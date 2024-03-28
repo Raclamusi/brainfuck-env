@@ -2,6 +2,8 @@
 
 ぼくの考えた最強の Brainfuck 環境です。
 
+サンプル: https://raclamusi.github.io/brainfuck-env/?share=PJjrsSxxsxbtaBIB
+
 ## 仕様
 
 ### Brainfuck
