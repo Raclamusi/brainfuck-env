@@ -112,9 +112,10 @@ class Printer {
         if (this.#outputPre.lastChild === null) {
             return;
         }
-        // 改行まで削除
+        // 改行直後か ESC まで削除
         const text = this.#outputPre.lastChild.textContent;
-        this.#outputPre.lastChild.textContent = text.slice(0, text.lastIndexOf('\n') + 1);
+        const end = Math.max(text.lastIndexOf('\n') + 1, text.lastIndexOf(String.fromCodePoint(Printer.ESC)));
+        this.#outputPre.lastChild.textContent = text.slice(0, end);
         // バッファごとにデコードして出力
         for (let i = this.#buffers.length - 1; i >= 0; i--) {
             const buf = this.#buffers[i];

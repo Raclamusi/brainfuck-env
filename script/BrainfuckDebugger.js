@@ -515,6 +515,7 @@ class BrainfuckDebugger {
                 }
             }
             elapsedTime += performance.now() - startTime;
+            this.#printer.flush();
             this.#statusSpan.textContent = `実行完了 (${Math.floor(elapsedTime)} ms)`;
             this.#statusSpan.style.color = "blue";
         }
