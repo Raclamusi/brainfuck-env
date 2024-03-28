@@ -34,6 +34,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const memlines = document.getElementById("memlines");
     const memcells = document.getElementById("memcells");
 
+    // 共有
+    const shareButton = document.getElementById("share_button");
+
 
     // 初期設定
     if (!load("initialized")) {
@@ -185,5 +188,56 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     untilButton.addEventListener("click", () => {
         bfDebugger.until();
+    });
+
+    // 共有の設定
+    const shareId = getShareID();
+    if (shareId) {
+        saveId = 0;
+        editor.setValue("Getting shared content...");
+        editor.setOption("readOnly", true);
+        input.value = "Getting shared content...";
+        input.setAttribute("readonly", "");
+        shareButton.setAttribute("disabled", "");
+        (async () => {
+            try {
+                const { code, input: inputText, error } = await getSharedContent(shareId);
+                if (error) {
+                    console.error(`share: ${error}`);
+                }
+                else {
+                    editor.setValue(code ?? "");
+                    input.value = inputText ?? "";
+                }
+            }
+            finally {
+                editor.setOption("readOnly", false);
+                input.removeAttribute("readonly");
+                shareButton.removeAttribute("disabled");
+                saveId = null;
+            }
+        })();
+    }
+    shareButton.addEventListener("click", () => {
+        shareButton.setAttribute("disabled", "");
+        saveEditors();
+        const code = editor.getValue();
+        const inputText = input.value;
+        (async () => {
+            try {
+                const { id, error } = await shareContent(code, inputText);
+                if (error) {
+                    console.error(`share: ${error}`);
+                }
+                else {
+                    const url = new URL(location.href);
+                    url.searchParams.set("share", id);
+                    history.replaceState(null, "", url);
+                }
+            }
+            finally {
+                shareButton.removeAttribute("disabled");
+            }
+        })();
     });
 });

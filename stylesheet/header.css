@@ -5,3 +5,40 @@
     border: 0.1rem solid lightblue;
     font-size: 1.2rem;
 }
+
+.header_nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.header_brand {
+    color: inherit;
+    text-decoration: none;
+}
+
+.header_links {
+    font-size: 1rem;
+}
+
+.header_links>a {
+    margin-left: 1em;
+}
+
+.header_links>button {
+    margin: -0.35em -0.25em -0.35em 0.75em;
+    padding: 0.25em 0.5em;
+    border: 0.1em solid lightblue;
+    border-radius: 0.25em;
+    background-color: lightcyan;
+}
+
+.header_links>button:hover:not(:disabled) {
+    border-color: rgb(161, 202, 215);
+    background-color: rgb(217, 247, 247);
+}
+
+.header_links>button:active:not(:disabled) {
+    border-color: rgb(200, 229, 238);
+    background-color: rgb(234, 255, 255);
+}

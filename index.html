@@ -37,10 +37,20 @@
     <script type="text/javascript" src="script/MemoryMarker.js"></script>
     <script type="text/javascript" src="script/BrainfuckNodeType.js"></script>
     <script type="text/javascript" src="script/BrainfuckDebugger.js"></script>
+    <script type="text/javascript" src="script/share.js"></script>
     <script type="text/javascript" src="script/main.js"></script>
 </head>
 <body>
-    <header class="header">RacBrainfuck</header>
+    <header class="header">
+        <nav class="header_nav">
+            <a href="." class="header_brand">RacBrainfuck</a>
+            <div class="header_links">
+                <button id="share_button">共有</button>
+                <a href="https://github.com/Raclamusi/brainfuck-env/blob/master/README.md" target="_blank">仕様</a>
+                <a href="https://github.com/Raclamusi/brainfuck-env" target="_blank">GitHub</a>
+            </div>
+        </nav>
+    </header>
     <main class="main">
         <div class="main_col">
             <div class="main_row">
@@ -125,14 +135,6 @@
                             <option value="invalid">無効</option>
                         </select>
                     </div>
-                </div>
-            </div>
-            <div class="main_row">
-                <div class="main_summary">リンク</div>
-                <div class="main_links">
-                    <a href="https://github.com/Raclamusi/brainfuck-env/blob/master/README.md" target="_blank">仕様</a>
-                    <a href="https://github.com/Raclamusi/brainfuck-env" target="_blank">GitHub</a>
-                    <a href="https://twitter.com/raclamusi" target="_blank">Twitter</a>
                 </div>
             </div>
         </div>
